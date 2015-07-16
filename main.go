@@ -29,11 +29,28 @@ type Question struct {
 	Num2 int
 }
 
+var sem = make(chan int, 250)
+
 func main() {
 
 }
 
+func Serve(queue chan []sqs.Message, sqsQ sqs.Queue) {
+	for q := range queue {
+		sem <- 1
+		go func() {
+			q := q
+			sem <- 1
+			go func() {
+				addToQuestionQ(q, sqsQ)
+				<-sem
+			}()
+		}()
+	}
+}
+
 func makeRun(public string, secret string, maxworkers int) error {
+
 	auth := aws.Auth{AccessKey: public, SecretKey: secret}
 	region := aws.Region{}
 	region.Name = "us-west-2"
@@ -47,7 +64,23 @@ func makeRun(public string, secret string, maxworkers int) error {
 		fmt.Println(QuestionQ)
 		return getErr
 	}
-	log.Println("Start")
+
+	msgSlice := []sqs.Message{}
+	for i := 0; i < 100000; i++ {
+		num1 := rand.Intn(9) + 1
+		num2 := rand.Intn(9 + 1)
+		q := Question{num1, num2}
+		jsonQ, _ := json.Marshal(&q)
+		msg := sqs.Message{}
+		body := base64.StdEncoding.EncodeToString(jsonQ)
+		msg.Body = body
+		msgSlice = append(msgSlice, msg)
+		if len(msgSlice) == 10 {
+			//the slice is ready, time to process it
+			//I guess we pass it to the Serve function
+		}
+	}
+
 	for i := 0; i < 250; i++ {
 		var msgList []sqs.Message
 		for c := 0; c < 10; c++ {
@@ -64,7 +97,6 @@ func makeRun(public string, secret string, maxworkers int) error {
 		go addToQuestionQ(msgList, *questionq)
 	}
 	wg.Wait()
-	log.Println("End")
 	return nil
 }
 
