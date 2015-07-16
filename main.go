@@ -26,7 +26,7 @@ type Question struct {
 	Num2 int
 }
 
-var sem = make(chan bool, 250)
+var sem = make(chan bool, 150)
 
 func main() {
 }
@@ -46,8 +46,8 @@ func makeRun(public string, secret string, maxworkers int) error {
 		fmt.Println(QuestionQName)
 		return getErr
 	}
+	msgSlice := make([]sqs.Message, 0, 10) //A slice that holds up to 10 messages
 	msgAll := [][]sqs.Message{}
-	msgSlice := []sqs.Message{}
 
 	for i := 0; i < 100000; i++ {
 		num1 := rand.Intn(9) + 1
