@@ -31,7 +31,7 @@ var sem = make(chan bool, 150)
 func main() {
 }
 
-func makeRun(public string, secret string, maxworkers int) error {
+func doRun(public string, secret string, maxworkers int) error {
 
 	auth := aws.Auth{AccessKey: public, SecretKey: secret}
 	region := aws.Region{}
@@ -54,9 +54,7 @@ func makeRun(public string, secret string, maxworkers int) error {
 		num2 := rand.Intn(9 + 1)
 		q := Question{num1, num2}
 		jsonQ, _ := json.Marshal(&q)
-		msg := sqs.Message{}
-		body := base64.StdEncoding.EncodeToString(jsonQ)
-		msg.Body = body
+		msg := sqs.Message{Body: base64.StdEncoding.EncodeToString(jsonQ)}
 		msgSlice = append(msgSlice, msg)
 		if len(msgSlice) == 10 {
 			msgAll = append(msgAll, msgSlice)
@@ -64,7 +62,7 @@ func makeRun(public string, secret string, maxworkers int) error {
 		}
 	}
 	for _, s := range msgAll {
-		s := s
+		s := s //It's idomatic go I swear! http://golang.org/doc/effective_go.html#channels
 		sem <- true
 		go func(sl10 []sqs.Message) {
 			addToQuestionQ(sl10, *questionq)
