@@ -26,7 +26,13 @@ type Question struct {
 	Num2 int
 }
 
-var sem = make(chan bool, 50)
+var bufferCount = 50 //Playing with this get's different speep through puts.
+//The mbAir needs it around 50 or it starts erroring out.
+//The mbPro can handle higher values, but diminishing returns.
+
+//But, even set at 50, the mbAir can put 100,000 items in the queu in  48 seconds.
+
+var sem = make(chan bool, bufferCount)
 
 func main() {
 }
