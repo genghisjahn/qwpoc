@@ -26,24 +26,9 @@ type Question struct {
 	Num2 int
 }
 
-var sem = make(chan int, 250)
+var sem = make(chan bool, 250)
 
 func main() {
-
-}
-
-func Serve(queue chan []sqs.Message, sqsQ *sqs.Queue) {
-	log.Println("In Serve")
-	for q := range queue {
-		log.Println("In range")
-		sem <- 1
-		go func() {
-			q := q
-			addToQuestionQ(q, *sqsQ)
-			<-sem
-		}()
-	}
-	log.Println("Done")
 }
 
 func makeRun(public string, secret string, maxworkers int) error {
@@ -61,12 +46,8 @@ func makeRun(public string, secret string, maxworkers int) error {
 		fmt.Println(QuestionQName)
 		return getErr
 	}
-
+	msgAll := [][]sqs.Message{}
 	msgSlice := []sqs.Message{}
-	var queue chan []sqs.Message
-	log.Println("Before Serve")
-	Serve(queue, questionq)
-	log.Println("After Serve")
 
 	for i := 0; i < 100000; i++ {
 		num1 := rand.Intn(9) + 1
@@ -78,14 +59,21 @@ func makeRun(public string, secret string, maxworkers int) error {
 		msg.Body = body
 		msgSlice = append(msgSlice, msg)
 		if len(msgSlice) == 10 {
-			//the slice is ready, time to process it
-			//I guess we pass it to the Serve function
-			log.Println("Send to Channel")
-			queue <- msgSlice
+			msgAll = append(msgAll, msgSlice)
 			msgSlice = []sqs.Message{}
 		}
 	}
-
+	for _, s := range msgAll {
+		s := s
+		sem <- true
+		go func(sl10 []sqs.Message) {
+			addToQuestionQ(sl10, *questionq)
+			defer func() { <-sem }()
+		}(s)
+	}
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
+	}
 	return nil
 }
 
