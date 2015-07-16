@@ -26,7 +26,7 @@ type Question struct {
 	Num2 int
 }
 
-var sem = make(chan bool, 150)
+var sem = make(chan bool, 50)
 
 func main() {
 }
