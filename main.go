@@ -11,6 +11,12 @@ import (
 	"github.com/AdRoll/goamz/sqs"
 )
 
+//Create a redis testJob result with 1,000,000 users.
+//Create a redis set for each user, and give each user 0-3 devices
+//Devices should have a fake GUID token and a fake GUID endpoint
+//Create a group/user user/group with 10,100,1000,10000,1000000 users.
+//Create a redis set of some kind that holds all of the message hashes.
+
 //QuestionQName : name of the questions SQS Queue
 const QuestionQName = "demo-questions"
 
