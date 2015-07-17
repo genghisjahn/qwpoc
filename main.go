@@ -16,6 +16,7 @@ import (
 //Devices should have a fake GUID token and a fake GUID endpoint
 //Create a group/user user/group with 10,100,1000,10000,1000000 users.
 //Create a redis set of some kind that holds all of the message hashes.
+//Time how long it takes to do things.
 
 //QuestionQName : name of the questions SQS Queue
 const QuestionQName = "demo-questions"
