@@ -26,7 +26,7 @@ type Question struct {
 	Num2 int
 }
 
-var bufferCount = 50 //Playing with this get's different speep through puts.
+var bufferCount = 500 //Playing with this get's different speep through puts.
 //The mbAir needs it around 50 or it starts erroring out.
 //The mbPro can handle higher values, but diminishing returns.
 
@@ -71,7 +71,7 @@ func doRun(public string, secret string, maxworkers int) error {
 		s := s //It's idomatic go I swear! http://golang.org/doc/effective_go.html#channels
 		sem <- true
 		go func(sl10 []sqs.Message) {
-			addToQuestionQ(sl10, *questionq)
+			addToQuestionQ(sl10, questionq)
 			defer func() { <-sem }()
 		}(s)
 	}
@@ -81,7 +81,7 @@ func doRun(public string, secret string, maxworkers int) error {
 	return nil
 }
 
-func addToQuestionQ(msgList []sqs.Message, sqsQ sqs.Queue) {
+func addToQuestionQ(msgList []sqs.Message, sqsQ *sqs.Queue) {
 	_, respErr := sqsQ.SendMessageBatch(msgList)
 	if respErr != nil {
 		log.Println("ERROR:", respErr)
