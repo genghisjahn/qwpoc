@@ -26,7 +26,7 @@ type Question struct {
 	Num2 int
 }
 
-var bufferCount = 500 //Playing with this get's different speep through puts.
+var bufferCount = 100 //Playing with this get's different speep through puts.
 //The mbAir needs it around 50 or it starts erroring out.
 //The mbPro can handle higher values, but diminishing returns.
 
@@ -55,7 +55,7 @@ func doRun(public string, secret string, maxworkers int) error {
 	msgSlice := make([]sqs.Message, 0, 10) //A slice that holds up to 10 messages
 	msgAll := [][]sqs.Message{}
 
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 10000; i++ {
 		num1 := rand.Intn(9) + 1
 		num2 := rand.Intn(9 + 1)
 		q := Question{num1, num2}
