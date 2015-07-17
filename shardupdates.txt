@@ -1,0 +1,12 @@
+
+admin - writes to job-queue
+job worker pulls all the userIDs
+Splits the userIDs into uniqueID Chunks of 10,000
+Writes the uniqueChunkID & all 10,000 userID to a datastore of some kind
+Writes an SQS item with the unique ChunkID to a user-chunk-queue
+Other hosts read from this, pull data from queue, pull set from datastore
+process records from data store
+delete chunk from datastore
+delete item from queue
+
+chunkID-GUID holds 10,000 userIDs
