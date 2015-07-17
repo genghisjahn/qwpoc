@@ -68,7 +68,6 @@ func doRun(public string, secret string, maxworkers int) error {
 		}
 	}
 	for _, s := range msgAll {
-		s := s //It's idomatic go I swear! http://golang.org/doc/effective_go.html#channels
 		sem <- true
 		go func(sl10 []sqs.Message) {
 			addToQuestionQ(sl10, questionq)
