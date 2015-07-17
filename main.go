@@ -38,7 +38,6 @@ func main() {
 }
 
 func doRun(public string, secret string, maxworkers int) error {
-
 	auth := aws.Auth{AccessKey: public, SecretKey: secret}
 	region := aws.Region{}
 	region.Name = "us-west-2"
