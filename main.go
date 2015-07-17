@@ -37,17 +37,21 @@ var sem = make(chan bool, bufferCount)
 func main() {
 }
 
-func doRun(public string, secret string, maxworkers int) error {
-
+func getQueue(name, public, secret string) (*sqs.Queue, error) {
 	auth := aws.Auth{AccessKey: public, SecretKey: secret}
 	region := aws.Region{}
 	region.Name = "us-west-2"
 	region.SQSEndpoint = "http://sqs.us-west-2.amazonaws.com"
 	SQS = sqs.New(auth, region)
 	if SQS == nil {
-		return fmt.Errorf("Can't get sqs reference for %v %v", auth, region)
+		return nil, fmt.Errorf("Can't get sqs reference for %v %v", auth, region)
 	}
-	questionq, getErr := SQS.GetQueue(QuestionQName)
+	return SQS.GetQueue(name)
+}
+
+func doRun(public string, secret string, maxworkers int) error {
+	questionq, getErr := getQueue(QuestionQName, public, secret)
+
 	if getErr != nil {
 		fmt.Println(QuestionQName)
 		return getErr
@@ -69,11 +73,18 @@ func doRun(public string, secret string, maxworkers int) error {
 	}
 	for _, s := range msgAll {
 		s := s //It's idomatic go I swear! http://golang.org/doc/effective_go.html#channels
+
+		//Using the Semaphore
 		sem <- true
 		go func(sl10 []sqs.Message) {
 			addToQuestionQ(sl10, *questionq)
 			defer func() { <-sem }()
 		}(s)
+		//******************
+
+		//Running sequentially.
+		//addToQuestionQ(s, *questionq)
+		//******************
 	}
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
