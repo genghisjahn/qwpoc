@@ -3,12 +3,14 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
 
 	"github.com/AdRoll/goamz/aws"
 	"github.com/AdRoll/goamz/sqs"
+	"github.com/garyburd/redigo/redis"
 )
 
 //Create a redis testJob result with 1,000,000 users.
@@ -40,8 +42,38 @@ var bufferCount = 50 //Playing with this get's different speep through puts.
 //But, even set at 50, the mbAir can put 100,000 items in the queu in  48 seconds.
 
 var sem = make(chan bool, bufferCount)
+var (
+	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
+	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
+)
 
 func main() {
+}
+
+func getRedisConn() redis.Conn {
+	redisPool := redis.NewPool(func() (redis.Conn, error) {
+		c, err := redis.Dial("tcp", *redisAddress)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return c, err
+	}, *maxConnections)
+	return redisPool.Get()
+}
+
+func createUsers() {
+	r := getRedisConn()
+	for i := 0; i < 1000000; i++ {
+		r.Do("SADD", "all-users-demo", fmt.Sprintf("u:%v", i+1))
+	}
+}
+
+func getUsers() []string {
+	r := getRedisConn()
+	userkeys, _ := redis.Strings(r.Do("SMEMBERS", "all-users-demo"))
+	return userkeys
 }
 
 func doRun(public string, secret string, maxworkers int) error {
