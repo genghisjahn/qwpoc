@@ -18,8 +18,8 @@ import (
 //Create a redis set of some kind that holds all of the message hashes.
 //Time how long it takes to do things.
 
-//QuestionQName : name of the questions SQS Queue
-const QuestionQName = "demo-questions"
+//QuestionQName : name of the problems SQS Queue
+const ProblemQName = "demo-problems"
 
 //AnswerQName : name of the answers SQS Queue
 const AnswerQName = "demo-answers"
@@ -54,9 +54,9 @@ func doRun(public string, secret string, maxworkers int) error {
 	if SQS == nil {
 		return fmt.Errorf("Can't get sqs reference for %v %v", auth, region)
 	}
-	questionq, getErr := SQS.GetQueue(QuestionQName)
+	probq, getErr := SQS.GetQueue(ProblemQName)
 	if getErr != nil {
-		fmt.Println(QuestionQName)
+		fmt.Println(ProblemQName)
 		return getErr
 	}
 	msgSlice := make([]sqs.Message, 0, 10) //A slice that holds up to 10 messages
@@ -77,7 +77,7 @@ func doRun(public string, secret string, maxworkers int) error {
 	for _, s := range msgAll {
 		sem <- true
 		go func(sl10 []sqs.Message) {
-			addToQuestionQ(sl10, *questionq)
+			addToProblemQ(sl10, *probq)
 			defer func() { <-sem }()
 		}(s)
 	}
@@ -87,7 +87,7 @@ func doRun(public string, secret string, maxworkers int) error {
 	return nil
 }
 
-func addToQuestionQ(msgList []sqs.Message, sqsQ sqs.Queue) {
+func addToProblemQ(msgList []sqs.Message, sqsQ sqs.Queue) {
 	_, respErr := sqsQ.SendMessageBatch(msgList)
 	if respErr != nil {
 		log.Println("ERROR:", respErr)
