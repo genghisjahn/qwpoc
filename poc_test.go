@@ -9,6 +9,7 @@ import (
 func TestRun(t *testing.T) {
 	var pub = os.Getenv("AWSPUB")
 	var secret = os.Getenv("AWSSecret")
+	createUsers()
 	ukeys := getUsers()
 	lenNum := 0
 	for _, v := range ukeys {
